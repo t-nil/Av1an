@@ -45,7 +45,7 @@ fn pretty_progress_style(resume_frames: u64) -> ProgressStyle {
             let resume_pos = if state.pos() < resume_frames {
                 resume_frames
             } else {
-                state.pos() - resume_frames
+                state.pos().saturating_sub(resume_frames)
             };
             if resume_pos == 0 || state.elapsed().as_secs_f32() < f32::EPSILON {
                 write!(w, "0 fps").unwrap();
@@ -64,7 +64,7 @@ fn pretty_progress_style(resume_frames: u64) -> ProgressStyle {
                 let resume_pos = if state.pos() < resume_frames {
                     resume_frames
                 } else {
-                    state.pos() - resume_frames
+                    state.pos().saturating_sub(resume_frames)
                 };
                 if resume_pos == 0 || state.elapsed().as_secs_f32() < f32::EPSILON {
                     write!(w, "unknown").unwrap();

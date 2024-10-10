@@ -760,7 +760,7 @@ impl Av1anContext {
     }
 
     fn calc_split_locations(&self) -> anyhow::Result<(Vec<Scene>, usize)> {
-        let zones = self.parse_zones()?;
+        let zones = self.parse_zones()?; // we assume that the zones returned are a) non-overlapping and b) ordered ascending by start_frame
 
         // Create a new input with the generated VapourSynth script for Scene Detection
         let input = self.vs_scd_script.as_ref().map_or_else(
@@ -787,22 +787,32 @@ impl Av1anContext {
             SplitMethod::None => {
                 let mut scenes = Vec::with_capacity(2 * zones.len() + 1);
                 let mut frames_processed = 0;
-                for zone in zones {
-                    let end_frame = zone.end_frame;
-
-                    if end_frame > frames_processed {
+        
+        // adding "in-between" zones so that every interval ends up mapped
+        for zone @ Scene {
+          start_frame,
+          end_frame,
+          ..
+        } in zones
+        {
+                    // start_frame < frames_processed would mean that zones overlap, which we test beforehand in `parse_zones()`
+          // start_frame = frames_processed means the two zones connect seamlessly, so don't add one in between
+          // else, add filler
+                    if start_frame > frames_processed {
                         scenes.push(Scene {
                             start_frame:    frames_processed,
-                            end_frame:      zone.start_frame,
+                            end_frame:      start_frame,
                             zone_overrides: None,
                         });
                     }
 
-                    scenes.push(zone);
+          // then, add zone
+          scenes.push(zone);
 
-                    frames_processed += end_frame;
+                    frames_processed = end_frame;
                 }
-                if self.frames > frames_processed {
+                // check if we need a final filler after the last zone
+        if self.frames > frames_processed {
                     scenes.push(Scene {
                         start_frame:    frames_processed,
                         end_frame:      self.frames,
