@@ -235,7 +235,7 @@ impl Broker<'_> {
             chunk.frames()
         );
 
-  let passes = chunk.passes;
+        let passes = chunk.passes;
         for current_pass in 1..=passes {
             for r#try in 1..=self.project.args.max_tries {
                 let res = self.project.create_pipes(chunk, current_pass, worker_id, padding);
@@ -260,14 +260,14 @@ impl Broker<'_> {
                     }
                     // avoids double-print of the error message as both a WARN and ERROR,
                     // since `Broker::encoding_loop` will print the error message as well
-                              warn!(
-            "Encoder failed (on chunk {} [{} - {}] - {}):\n{}",
-            chunk.index,
-            chunk.start_frame,
-            chunk.end_frame,
-            chunk.encoder.format(),
-            e
-          ); // TODO print time range
+                    warn!(
+                        "Encoder failed (on chunk {} [{} - {}] - {}):\n{}",
+                        chunk.index,
+                        chunk.start_frame,
+                        chunk.end_frame,
+                        chunk.encoder.format(),
+                        e
+                    ); // TODO print time range
                 } else {
                     break;
                 }
